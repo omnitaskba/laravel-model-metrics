@@ -9,7 +9,14 @@ use Omnitaskba\ModelMetrics\Traits\HasMetrics;
 
 class TestCase extends Orchestra
 {
-    use SetUpDatabase; // Use the new database setup trait
+    use SetUpDatabase;
+
+    /**
+     * @var \Illuminate\Testing\TestResponse|null
+     * * This property is manually declared to fix compatibility issues when running
+     * 'prefer-lowest' with older Orchestra Testbench versions.
+     */
+    protected static $latestResponse;
 
     protected function setUp(): void
     {
