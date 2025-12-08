@@ -15,20 +15,13 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      # If one combination fails, continue testing others for full report
       fail-fast: false
       matrix:
-        # Define the PHP versions to test against
         php-version: ['8.3', '8.4']
-
-        # Define the Laravel versions to test against
         laravel-version: ['11.*', '12.*']
-
-        # Test both the latest available dependencies and the minimum required ones
         dependency-stability: ['prefer-lowest', 'prefer-dist']
 
         include:
-          # --- Dedicated PHPStan Job (Runs Once on the latest stable stack) ---
           - php-version: '8.4'
             laravel-version: '12.*'
             dependency-stability: 'phpstan'
@@ -44,9 +37,17 @@ jobs:
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_sqlite, iconv, gd, intl, simplexml
           coverage: none
 
-      - name: Install Composer dependencies
+      - name: Install Dependencies (Default Jobs)
+        # Runs for 'prefer-lowest' and 'prefer-dist'
+        if: matrix.dependency-stability != 'phpstan'
         run: |
           composer update --${{ matrix.dependency-stability }} --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Install Dependencies (PHPStan Job)
+        # Runs a standard install for the dedicated PHPStan check
+        if: matrix.dependency-stability == 'phpstan'
+        run: |
+          composer update --prefer-dist --no-interaction --optimize-autoloader
 
       - name: Run Pest Tests
         if: matrix.dependency-stability != 'phpstan'
