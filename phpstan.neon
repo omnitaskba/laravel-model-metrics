@@ -1,0 +1,17 @@
+# phpstan.neon
+includes:
+    - vendor/phpstan/phpstan-strict-rules/rules.neon # Recommended for strictness
+    - vendor/nunomaduro/larastan/extension.neon # Necessary for Laravel/Eloquent magic
+
+parameters:
+    # Aim for the highest level (Level 9) for maximum strictness.
+    level: 5
+
+    paths:
+        - src
+        - tests
+
+    # Ignore specific errors in third-party files or known Laravel magic you can't hint.
+    ignoreErrors:
+        # Example of ignoring specific errors if needed
+        # - '#Method [a-zA-Z0-9\\]+::getMetricQueryBuilder\(\) should return#'

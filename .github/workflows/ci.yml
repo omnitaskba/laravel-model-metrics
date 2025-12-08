@@ -1,0 +1,56 @@
+## .github/workflows/ci.yml
+
+name: Continuous Integration
+
+# Run this workflow on pushes to main and on all pull requests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  run-tests:
+    name: P${{ matrix.php-version }} L${{ matrix.laravel-version }} ${{ matrix.dependency-stability }}
+
+    runs-on: ubuntu-latest
+
+    strategy:
+      # If one combination fails, continue testing others for full report
+      fail-fast: false
+      matrix:
+        # Define the PHP versions to test against
+        php-version: ['8.3', '8.4']
+
+        # Define the Laravel versions to test against (L11 is historical/LTS, L12 is current)
+        laravel-version: ['11.*', '12.*']
+
+        # Test both the latest available dependencies and the minimum required ones
+        dependency-stability: ['prefer-lowest', 'prefer-dist']
+
+        include:
+          # --- Dedicated PHPStan Job (Runs Once on the latest stable stack) ---
+          # This job runs static analysis only, using the latest PHP and Laravel versions.
+          - php-version: '8.4'
+            laravel-version: '12.*'
+            dependency-stability: 'phpstan'
+
+    steps:
+      - name: ⬇️ Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php-version }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_sqlite, iconv, gd, intl, simplexml
+          coverage: none
+
+      - name: 📦 Install Composer dependencies
+        run: |
+          composer update --${{ matrix.dependency-stability }} --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: 🧪 Run Pest Tests
+        if: matrix.dependency-stability != 'phpstan'
+        run: |
+          vendor/bin/pest

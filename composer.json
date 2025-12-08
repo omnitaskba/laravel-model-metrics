@@ -1,0 +1,69 @@
+{
+  "name": "omnitaskba/laravel-model-metrics",
+  "description": "Easily attach time-based metrics to any Eloquent model.",
+  "keywords": [
+    "omnitaskba",
+    "laravel",
+    "metrics",
+    "analytics"
+  ],
+  "homepage": "https://github.com/omnitaskba/laravel-model-metrics",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Zlatan Goralija",
+      "email": "zlatan@omnitask.ba",
+      "role": "Developer"
+    }
+  ],
+  "require": {
+    "php": "^8.2",
+    "illuminate/support": "^10.0|^11.0|^12.0",
+    "illuminate/database": "^10.0|^11.0|^12.0"
+  },
+  "require-dev": {
+    "laravel/pint": "^1.14",
+    "nunomaduro/collision": "^8.1.1|^7.10.0",
+    "nunomaduro/larastan": "^3.8",
+    "orchestra/testbench": "^9.0",
+    "pestphp/pest": "^2.34",
+    "pestphp/pest-plugin-laravel": "^2.3",
+    "phpstan/phpstan": "^2.1",
+    "phpstan/phpstan-strict-rules": "^2.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Omnitaskba\\ModelMetrics\\": "src",
+      "Omnitaskba\\ModelMetrics\\Database\\Factories\\": "database/factories"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Omnitaskba\\ModelMetrics\\Tests\\": "tests",
+      "Workbench\\App\\": "workbench/app"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Omnitaskba\\ModelMetrics\\ModelMetricsServiceProvider"
+      ],
+      "aliases": {}
+    }
+  },
+  "scripts": {
+    "test": "vendor/bin/pest",
+    "phpstan": "vendor/bin/phpstan analyse --memory-limit=2G",
+    "test-coverage": "vendor/bin/pest --coverage",
+    "format": "vendor/bin/pint"
+  },
+  "config": {
+    "sort-packages": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true,
+      "php-http/discovery": true
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}
