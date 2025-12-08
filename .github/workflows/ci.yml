@@ -1,8 +1,6 @@
-## .github/workflows/ci.yml
+## .github/workflows/ci.yml - The Corrected File
 
 name: Continuous Integration
-
-# Run this workflow on pushes to main and on all pull requests
 on:
   push:
     branches:
@@ -16,21 +14,12 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
-      # If one combination fails, continue testing others for full report
       fail-fast: false
       matrix:
-        # Define the PHP versions to test against
         php-version: ['8.3', '8.4']
-
-        # Define the Laravel versions to test against (L11 is historical/LTS, L12 is current)
         laravel-version: ['11.*', '12.*']
-
-        # Test both the latest available dependencies and the minimum required ones
         dependency-stability: ['prefer-lowest', 'prefer-dist']
-
         include:
-          # --- Dedicated PHPStan Job (Runs Once on the latest stable stack) ---
-          # This job runs static analysis only, using the latest PHP and Laravel versions.
           - php-version: '8.4'
             laravel-version: '12.*'
             dependency-stability: 'phpstan'
@@ -53,19 +42,34 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_sqlite, iconv, gd, intl, simplexml
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_sqlite, pdo_mysql, iconv, gd, intl, simplexml # Added pdo_mysql
           coverage: none
 
-      - name: Verify MySQL connection
-        run: |
-          mysql --version
-          mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot -proot -e "SHOW DATABASES"
-
       - name: Install Composer dependencies
+        run: composer update --${{ matrix.dependency-stability }} --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Run Database Migrations
+        # This runs the Testbench migrations with the database credentials
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
         run: |
-          composer update --${{ matrix.dependency-stability }} --no-interaction --prefer-dist --optimize-autoloader
+          php vendor/bin/testbench package:discover
+          php vendor/bin/testbench migrate --database=mysql --step
 
       - name: Run Pest Tests
         if: matrix.dependency-stability != 'phpstan'
+        # Crucial: Pass the database credentials to Pest
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
         run: |
           vendor/bin/pest
