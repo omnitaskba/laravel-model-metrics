@@ -35,22 +35,37 @@ jobs:
             laravel-version: '12.*'
             dependency-stability: 'phpstan'
 
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_DATABASE: testing
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 33306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+
     steps:
-      - name: ⬇️ Checkout code
+      - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: ⚙️ Setup PHP
+      - name: Setup PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_sqlite, iconv, gd, intl, simplexml
           coverage: none
 
-      - name: 📦 Install Composer dependencies
+      - name: Verify MySQL connection
+        run: |
+          mysql --version
+          mysql --host 127.0.0.1 --port ${{ job.services.mysql.ports['3306'] }} -uroot -proot -e "SHOW DATABASES"
+
+      - name: Install Composer dependencies
         run: |
           composer update --${{ matrix.dependency-stability }} --no-interaction --prefer-dist --optimize-autoloader
 
-      - name: 🧪 Run Pest Tests
+      - name: Run Pest Tests
         if: matrix.dependency-stability != 'phpstan'
         run: |
           vendor/bin/pest
