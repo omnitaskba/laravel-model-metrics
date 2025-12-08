@@ -1,6 +1,7 @@
-## .github/workflows/ci.yml - The Corrected File
+## .github/workflows/ci.yml
 
 name: Continuous Integration
+
 on:
   push:
     branches:
@@ -14,25 +15,23 @@ jobs:
     runs-on: ubuntu-latest
 
     strategy:
+      # If one combination fails, continue testing others for full report
       fail-fast: false
       matrix:
+        # Define the PHP versions to test against
         php-version: ['8.3', '8.4']
+
+        # Define the Laravel versions to test against
         laravel-version: ['11.*', '12.*']
+
+        # Test both the latest available dependencies and the minimum required ones
         dependency-stability: ['prefer-lowest', 'prefer-dist']
+
         include:
+          # --- Dedicated PHPStan Job (Runs Once on the latest stable stack) ---
           - php-version: '8.4'
             laravel-version: '12.*'
             dependency-stability: 'phpstan'
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_DATABASE: testing
-          MYSQL_ROOT_PASSWORD: root
-        ports:
-          - 33306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
     steps:
       - name: Checkout code
@@ -42,34 +41,19 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_sqlite, pdo_mysql, iconv, gd, intl, simplexml # Added pdo_mysql
+          # CRITICAL: Ensure pdo_sqlite extension is installed for in-memory DB
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_sqlite, iconv, gd, intl, simplexml
           coverage: none
 
       - name: Install Composer dependencies
-        run: composer update --${{ matrix.dependency-stability }} --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Run Database Migrations
-        # This runs the Testbench migrations with the database credentials
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
-          DB_DATABASE: testing
-          DB_USERNAME: root
-          DB_PASSWORD: root
         run: |
-          php vendor/bin/testbench package:discover
-          php vendor/bin/testbench migrate --database=mysql --step
+          composer update --${{ matrix.dependency-stability }} --no-interaction --prefer-dist --optimize-autoloader
 
       - name: Run Pest Tests
         if: matrix.dependency-stability != 'phpstan'
-        # Crucial: Pass the database credentials to Pest
+        # CRITICAL: Set environment variables for in-memory SQLite
         env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: ${{ job.services.mysql.ports['3306'] }}
-          DB_DATABASE: testing
-          DB_USERNAME: root
-          DB_PASSWORD: root
+          DB_CONNECTION: sqlite
+          DB_DATABASE: :memory:
         run: |
           vendor/bin/pest
