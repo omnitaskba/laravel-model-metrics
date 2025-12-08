@@ -41,7 +41,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          # CRITICAL: Ensure pdo_sqlite extension is installed for in-memory DB
           extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_sqlite, iconv, gd, intl, simplexml
           coverage: none
 
@@ -51,9 +50,8 @@ jobs:
 
       - name: Run Pest Tests
         if: matrix.dependency-stability != 'phpstan'
-        # CRITICAL: Set environment variables for in-memory SQLite
         env:
           DB_CONNECTION: sqlite
-          DB_DATABASE: :memory:
+          DB_DATABASE: ":memory:"
         run: |
           vendor/bin/pest
