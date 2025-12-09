@@ -3,7 +3,7 @@
 namespace Omnitaskba\ModelMetrics\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
-use Omnitaskba\ModelMetrics\Tests\TestModel;
+use Illuminate\Support\Collection;
 use Omnitaskba\ModelMetrics\Models\Metric;
 use Omnitaskba\ModelMetrics\Models\AggregatedMetric;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -121,12 +121,20 @@ trait HasMetrics
      *
      * @param string|BackedEnum $name
      * @param int $limit
-     * @return \Illuminate\Support\Collection
+     * @return Collection
+     * @throws \Exception
      */
-    public function getMetricHistory(string|BackedEnum $name, int $limit = 30): \Illuminate\Support\Collection
+    public function getMetricHistory(string|BackedEnum $name, int $limit = 30): Collection
     {
         $metricName = $name instanceof BackedEnum ? $name->value : $name;
-        $dateExpression = DB::raw("year || '-' || month || '-' || day AS date_string");
+        $driver = $this->dailyMetrics()->getConnection()->getDriverName(); // Get driver name
+
+        //Define the driver-specific date expression
+        $dateExpression = match ($driver) {
+            'sqlite' => DB::raw("year || '-' || month || '-' || day AS date_string"),
+            'mysql', 'pgsql' => DB::raw("CONCAT_WS('-', year, month, day) AS date_string"),
+            default => throw new \Exception("Unsupported metrics driver: {$driver}"),
+        };
 
         $totalValue = DB::raw('SUM(value) as total_value');
 
@@ -166,6 +174,7 @@ trait HasMetrics
      * @param DateTimeInterface|null $startDate
      * @param DateTimeInterface|null $endDate
      * @return Builder
+     * @throws \Exception
      */
     protected function getMetricQueryBuilder(
         string $metricName,
@@ -174,32 +183,27 @@ trait HasMetrics
     ): \Illuminate\Database\Eloquent\Builder
     {
         $query = $this->dailyMetrics()->getQuery()->where('name', $metricName);
-        $dateExpressionString = "printf('%04d-%02d-%02d', year, month, day)";
+        $driver = $query->getConnection()->getDriverName();
+
+        //Determine the correct SQL expression for date concatenation
+        $dateExpression = match ($driver) {
+            'sqlite' => "strftime('%Y-%m-%d', printf('%04d-%02d-%02d', year, month, day))",
+            'mysql' => "DATE(CONCAT_WS('-', year, month, day))",
+            'pgsql' => "TO_DATE(CONCAT_WS('-', year, month, day), 'YYYY-MM-DD')",
+            default => throw new \Exception("Unsupported metrics driver: {$driver}"),
+        };
 
         if ($startDate !== null) {
             $startDateString = $startDate->format('Y-m-d');
-            $query->whereRaw("strftime('%Y-%m-%d', {$dateExpressionString}) >= ?", [$startDateString]);
+            $query->whereRaw("{$dateExpression} >= ?", [$startDateString]);
         }
 
         if ($endDate) {
             $endDateString = $endDate->format('Y-m-d');
-            $query->whereRaw("strftime('%Y-%m-%d', {$dateExpressionString}) <= ?", [$endDateString]);
+            $query->whereRaw("{$dateExpression} <= ?", [$endDateString]);
         }
 
         return $query;
-    }
-
-    /**
-     * Define the relationship for the single aggregated metric.
-     *
-     * @return MorphOne
-     */
-    public function aggregatedMetric(): MorphOne
-    {
-        return $this->morphOne(
-            config('model-metrics.aggregated.model') ?? AggregatedMetric::class,
-            'model'
-        );
     }
 
     /**
@@ -260,7 +264,7 @@ trait HasMetrics
 
         return $this->aggregatedMetrics()->updateOrCreate(
             ['name' => $metricName],
-            ['value' => DB::raw("value + {$value}")]
+            ['value' => DB::raw('value + ?', [$value])]
         );
     }
 
@@ -277,7 +281,7 @@ trait HasMetrics
 
         return $this->aggregatedMetrics()->updateOrCreate(
             ['name' => $metricName],
-            ['value' => DB::raw("value - {$value}")]
+            ['value' => DB::raw('value - ?', [$value])]
         );
     }
 
