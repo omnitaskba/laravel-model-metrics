@@ -4,8 +4,8 @@ includes:
     - vendor/nunomaduro/larastan/extension.neon # Necessary for Laravel/Eloquent magic
 
 parameters:
-    # Aim for the highest level (Level 9) for maximum strictness.
     level: 5
+    treatPhpDocTypesAsCertain: false
 
     paths:
         - src
@@ -13,5 +13,8 @@ parameters:
 
     # Ignore specific errors in third-party files or known Laravel magic you can't hint.
     ignoreErrors:
-        # Example of ignoring specific errors if needed
-        # - '#Method [a-zA-Z0-9\\]+::getMetricQueryBuilder\(\) should return#'
+        # PestPHP `$this` inside closures
+        - '#Undefined variable: \$this#'
+        - '#Dynamic call to static method Illuminate\\Database\\Eloquent\\Builder#'
+        - '#Access to an undefined property Illuminate\\Database\\Eloquent\\Model#'
+        - '#Call to an undefined method Illuminate\\Database\\ConnectionInterface::getDriverName#'

@@ -3,11 +3,11 @@
 namespace Omnitaskba\ModelMetrics\Traits;
 
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Omnitaskba\ModelMetrics\Models\Metric;
 use Omnitaskba\ModelMetrics\Models\AggregatedMetric;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Support\Facades\DB;
 use DateTimeInterface;
 use BackedEnum;
@@ -198,7 +198,7 @@ trait HasMetrics
             $query->whereRaw("{$dateExpression} >= ?", [$startDateString]);
         }
 
-        if ($endDate) {
+        if ($endDate !== null) {
             $endDateString = $endDate->format('Y-m-d');
             $query->whereRaw("{$dateExpression} <= ?", [$endDateString]);
         }
@@ -239,9 +239,9 @@ trait HasMetrics
      *
      * @param string|BackedEnum $name
      * @param float $value
-     * @return AggregatedMetric
+     * @return Model
      */
-    public function setAggregatedMetric(string|BackedEnum $name, float $value): AggregatedMetric
+    public function setAggregatedMetric(string|BackedEnum $name, float $value): Model
     {
         $metricName = $name instanceof BackedEnum ? $name->value : $name;
 
@@ -256,9 +256,9 @@ trait HasMetrics
      *
      * @param string|BackedEnum $name
      * @param float $value
-     * @return AggregatedMetric
+     * @return Model
      */
-    public function incrementAggregatedMetric(string|BackedEnum $name, float $value = 1.0): AggregatedMetric
+    public function incrementAggregatedMetric(string|BackedEnum $name, float $value = 1.0): Model
     {
         $metricName = $name instanceof BackedEnum ? $name->value : $name;
 
@@ -277,9 +277,9 @@ trait HasMetrics
      *
      * @param string|BackedEnum $name
      * @param float $value
-     * @return AggregatedMetric
+     * @return Model
      */
-    public function decrementAggregatedMetric(string|BackedEnum $name, float $value = 1.0): AggregatedMetric
+    public function decrementAggregatedMetric(string|BackedEnum $name, float $value = 1.0): Model
     {
         $metricName = $name instanceof BackedEnum ? $name->value : $name;
 
@@ -297,15 +297,15 @@ trait HasMetrics
      * Reset an aggregated metric value to 0.
      *
      * @param string|BackedEnum $name
-     * @return AggregatedMetric|null
+     * @return Model|null
      */
-    public function resetAggregatedMetric(string|BackedEnum $name): ?AggregatedMetric
+    public function resetAggregatedMetric(string|BackedEnum $name): ?Model
     {
         $metricName = $name instanceof BackedEnum ? $name->value : $name;
 
         $metric = $this->aggregatedMetrics()->where('name', $metricName)->first();
 
-        if ($metric) {
+        if ($metric !== null) {
             $metric->update(['value' => 0.0]);
         }
 

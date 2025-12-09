@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 /**
  * @mixin \Illuminate\Database\Eloquent\Builder<\Omnitaskba\ModelMetrics\Models\Metric>
  * @property float $value
- * @property-read float $total_value // For aliased SUM/SELECT calls
+ * @property-read float $total_value
  */
 class Metric extends Model
 {
