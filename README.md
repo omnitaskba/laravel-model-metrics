@@ -115,7 +115,7 @@ Aggregated metrics store a single value (e.g., a total score or streak count) an
 You can publish the configuration file to customize the table names used by the package:
 
 ```bash
-php artisan vendor:publish --tag=laravel-model-metrics-config
+php artisan vendor:publish --tag=model-metrics-config
 ```
 
 This will create a config/model-metrics.php file with the following contents, allowing you to customize the table names and model classes used for each metric type:
