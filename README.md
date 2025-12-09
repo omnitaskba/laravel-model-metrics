@@ -34,7 +34,7 @@ composer require omnitaskba/laravel-model-metrics
 
 ### 2. Run Migrations
 
-The package creates two dedicated tables: `metrics` and `aggregated_metrics`.
+The package creates two dedicated tables: `model_metrics` and `model_aggregated_metrics`.
 ```bash
 php artisan migrate
 ```

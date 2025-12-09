@@ -22,12 +22,12 @@ trait SetUpDatabase
     {
         $schema = $this->app['db']->connection()->getSchemaBuilder();
 
-        $timeSeriesMigration = include __DIR__.'/../database/migrations/create_model_metrics_table.php.stub';
+        $timeSeriesMigration = include __DIR__.'/../database/migrations/create_model_metrics_table.php';
         if (! $schema->hasTable('model_metrics')) {
             $timeSeriesMigration->up();
         }
 
-        $aggregatedMigration = include __DIR__.'/../database/migrations/create_model_aggregated_metrics_table.php.stub';
+        $aggregatedMigration = include __DIR__.'/../database/migrations/create_model_aggregated_metrics_table.php';
         if (! $schema->hasTable('model_aggregated_metrics')) {
             $aggregatedMigration->up();
         }

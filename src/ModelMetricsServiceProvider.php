@@ -22,11 +22,11 @@ class ModelMetricsServiceProvider extends ServiceProvider
             ], 'model-metrics-config');
 
             $this->publishes([
-                __DIR__.'/../database/migrations/create_model_metrics_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_model_metrics_table.php'),
+                __DIR__.'/../database/migrations/create_model_metrics_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_model_metrics_table.php'),
             ], 'model-metrics-migrations');
 
             $this->publishes([
-                __DIR__.'/../database/migrations/create_model_aggregated_metrics_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time() + 1).'_create_model_aggregated_metrics_table.php'),
+                __DIR__.'/../database/migrations/create_model_aggregated_metrics_table.php' => database_path('migrations/'.date('Y_m_d_His', time() + 1).'_create_model_aggregated_metrics_table.php'),
             ], 'model-metrics-migrations');
         }
 
