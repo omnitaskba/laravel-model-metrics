@@ -64,51 +64,255 @@ enum UserMetric: string {
     case VIEWS = 'views';
     case SALES = 'sales';
     case STREAK = 'streak';
+    case HIGH_SCORE = 'high_score';
+    // ...
 }
 ```
 
-### 1. Daily Metrics (Time Series)
+## Daily & Aggregated Metrics Documentation
 
-Daily metrics are stored per day (year, month, day) and are best for tracking historical data.
+### 📅 Daily Metrics (Time Series)
 
-**Core Methods**
+Daily metrics are stored by day (year, month, day) and track historical,
+time‑sensitive data.
 
-| Method                                   | Description                              | Example Use                                                   |
-|------------------------------------------|-------------------------------------------|---------------------------------------------------------------|
-| `incrementDailyMetric(name, value = 1)`  | Increments the metric value for today.    | `$user->incrementDailyMetric(UserMetric::VIEWS, 5);`         |
-| `decrementDailyMetric(name, value = 1)`  | Decrements the metric value for today.    | `$user->decrementDailyMetric('refunds', 1.5);`               |
-| `getTodayMetric(name)`                   | Retrieves the current value for today.    | `$user->getTodayMetric(UserMetric::VIEWS);`                  |
+------------------------------------------------------------------------
 
-**History & Range Queries**
+#### 1. `incrementDailyMetric()`
 
-| Method                | Description                                                   | Arguments                    | Returns     |
-|-----------------------|---------------------------------------------------------------|-------------------------------|-------------|
-| `getTotalMetric()`    | SUM of the metric within the given date range.                | `?startDate, ?endDate`        | `float`     |
-| `getTotalForPastDays()` | SUM for the last N days (including today).                  | `int $days`                   | `float`     |
-| `getMetricHistory()`  | Collection of daily records, sorted descending by date.       | `int $limit = 30`             | `Collection` |
+Increments the metric value for the current day. Creates the daily
+record if it doesn't exist.
 
-Example of Range Query:
-```php
+| Argument | Type                | Default  | Description                              |
+|----------|---------------------|----------|------------------------------------------|
+| `name`   | string or BackedEnum | Required | The name of the metric (e.g., `UserMetric::HIGH_SCORE`).  |
+| `value`  | float               | 1.0      | Amount to increment by.                  |
+
+
+##### Example
+
+``` php
+// Assuming current date is 2025-12-09
+$user->incrementDailyMetric(UserMetric::HIGH_SCORE);       // Value: 1.0
+$user->incrementDailyMetric(UserMetric::HIGH_SCORE, 5.5);  // Value: 6.5
+```
+
+**Returns:** New value of the metric record.
+
+------------------------------------------------------------------------
+
+#### 2. `decrementDailyMetric()`
+
+Decrements the metric value for the current day. Creates the daily
+record if it doesn't exist.
+
+| Argument | Type                | Default  | Description               |
+|----------|---------------------|----------|---------------------------|
+| `name`   | string or BackedEnum | Required | The metric name.          |
+| `value`  | float               | 1.0      | Amount to decrement by.   |
+
+##### Example
+
+``` php
+// Assuming current daily high_score are 20.0
+$user->decrementDailyMetric(UserMetric::HIGH_SCORE, 0.5);
+```
+
+**Returns:** New value (`19.5` in this case).
+
+------------------------------------------------------------------------
+
+#### 3. `getTodayMetric()`
+
+Retrieves today's metric value.
+
+| Argument | Type                | Default  | Description  |
+|----------|---------------------|----------|--------------|
+| `name`   | string or BackedEnum | Required | Metric name. |
+
+##### Example
+
+``` php
+$todayViews = $user->getTodayMetric(UserMetric::HIGH_SCORE);
+```
+
+**Returns:**\
+`float(19.5)` --- or `0.0` if none exists.
+
+------------------------------------------------------------------------
+
+#### 4. `getTotalMetric()`
+
+Calculates the sum across all days between two dates (inclusive).
+
+| Argument     | Type                | Default | Description |
+|--------------|---------------------|---------|-------------|
+| `name`       | string or BackedEnum | Required | Metric name. |
+| `startDate`  | DateTimeInterface   | null    | Start date. |
+| `endDate`    | DateTimeInterface   | null    | End date. |
+
+##### Example
+
+``` php
 use DateTime;
+
 $start = new DateTime('2025-10-01');
 $end = new DateTime('2025-10-31');
 
-// Get total sales for the month of October
-$totalSales = $user->getTotalMetric(UserMetric::SALES, $start, $end); // float(1250.0)
+$totalSales = $user->getTotalMetric(ProductMetric::SALES, $start, $end);
 ```
 
-### 2. Aggregated Metrics (Single Value)
+**Returns:** `float(1250.0)` or `0.0` if no data.
 
-Aggregated metrics store a single value (e.g., a total score or streak count) and are persisted until explicitly changed or cleared.
+------------------------------------------------------------------------
 
-| Method                                       | Description                                        | Example Use                                                     |
-|----------------------------------------------|----------------------------------------------------|-----------------------------------------------------------------|
-| `setAggregatedMetric(name, value)`           | Sets or overwrites the metric value.               | `$user->setAggregatedMetric('high_score', 999);`               |
-| `incrementAggregatedMetric(name, value = 1)` | Increases the value.                               | `$user->incrementAggregatedMetric(UserMetric::STREAK);`        |
-| `decrementAggregatedMetric(name, value = 1)` | Decreases the value.                               | `$user->decrementAggregatedMetric('hp', 5);`                   |
-| `getAggregatedMetric(name)`                  | Retrieves the value (defaults to 0.0 if not set).  | `$user->getAggregatedMetric(UserMetric::STREAK);`              |
-| `resetAggregatedMetric(name)`                | Resets the metric value to zero (0.0).             | `$user->resetAggregatedMetric('streak');`                      |
-| `clearAggregatedMetric(name)`                | Deletes the metric record (row is removed).        | `$user->clearAggregatedMetric('old_metric');`                  |
+#### 5. `getTotalForPastDays()`
+
+Sums the metric for the last N days (including today).
+
+| Argument | Type                | Default  | Description                     |
+|----------|---------------------|----------|---------------------------------|
+| `name`   | string or BackedEnum | Required | Metric name.                    |
+| `days`   | int                 | Required | How many days to look back.     |
+
+
+##### Example
+
+``` php
+$lastWeekViews = $user->getTotalForPastDays(ProductMetric::VIEWS, 7);
+```
+
+**Returns:** `float(85.5)`
+
+------------------------------------------------------------------------
+
+#### 6. `getMetricHistory()`
+
+Retrieves a collection of daily metric records grouped by day, sorted
+descending.
+
+| Argument | Type                | Default | Description              |
+|----------|---------------------|---------|--------------------------|
+| `name`   | string or BackedEnum | Required | Metric name.             |
+| `limit`  | int                 | 30      | Max number of records.   |
+
+##### Example
+
+``` php
+$history = $user->getMetricHistory(ProductMetric::VIEWS, 10);
+```
+
+------------------------------------------------------------------------
+
+### 📊 Aggregated Metrics (Single Value)
+
+Aggregated metrics store a single persistent value.
+
+------------------------------------------------------------------------
+
+#### 1. `setAggregatedMetric()`
+
+Sets or overwrites the metric value.
+
+| Argument | Type                | Default  | Description    |
+|----------|---------------------|----------|----------------|
+| `name`   | string or BackedEnum | Required | Metric name.   |
+| `value`  | float               | Required | Value to set.  |
+
+##### Example
+
+``` php
+$user->setAggregatedMetric(UserMetric::HIGH_SCORE, 999.5);
+```
+
+------------------------------------------------------------------------
+
+#### 2. `incrementAggregatedMetric()`
+
+Increases the metric value.
+
+| Argument | Type                | Default | Description        |
+|----------|---------------------|---------|--------------------|
+| `name`   | string or BackedEnum | Required | Metric name.       |
+| `value`  | float               | 1.0     | Increment amount.  |
+
+##### Example
+
+``` php
+$user->incrementAggregatedMetric(UserMetric::LOGIN_STREAK); // New value: 6.0
+```
+
+------------------------------------------------------------------------
+
+#### 3. `decrementAggregatedMetric()`
+
+Decreases the value.
+
+| Argument | Type                | Default | Description        |
+|----------|---------------------|---------|--------------------|
+| `name`   | string or BackedEnum | Required | Metric name.       |
+| `value`  | float               | 1.0     | Decrement amount.  |
+
+##### Example
+
+``` php
+$user->decrementAggregatedMetric(UserMetric::HIGH_SCORE, 5.5); // New value: 94.5
+```
+
+------------------------------------------------------------------------
+
+#### 4. `getAggregatedMetric()`
+
+Retrieves current aggregated value.
+
+##### Example
+
+``` php
+$currentScore = $user->getAggregatedMetric(UserMetric::HIGH_SCORE);
+```
+
+**Returns:** `float(999.5)` (or `0.0` if missing)
+
+------------------------------------------------------------------------
+
+#### 5. `hasAggregatedMetric()`
+
+Checks if the record exists.
+
+##### Example
+
+``` php
+if ($user->hasAggregatedMetric(UserMetric::HIGH_SCORE)) {
+    // ...
+}
+```
+
+------------------------------------------------------------------------
+
+#### 6. `resetAggregatedMetric()`
+
+Sets value to `0.0` (record stays).
+
+##### Example
+
+``` php
+$user->resetAggregatedMetric(UserMetric::LOGIN_STREAK);
+```
+
+------------------------------------------------------------------------
+
+#### 7. `clearAggregatedMetric()`
+
+Deletes the aggregated metric record entirely.
+
+##### Example
+
+``` php
+$user->clearAggregatedMetric('old_metric');
+```
+
+**Returns:** `true` on success, `false` if not found.
+
 
 ## ⚙️ Configuration
 
