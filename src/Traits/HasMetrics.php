@@ -262,10 +262,14 @@ trait HasMetrics
     {
         $metricName = $name instanceof BackedEnum ? $name->value : $name;
 
-        return $this->aggregatedMetrics()->updateOrCreate(
+        $metric = $this->aggregatedMetrics()->firstOrCreate(
             ['name' => $metricName],
-            ['value' => DB::raw('value + ?', [$value])]
+            ['value' => 0.0]
         );
+
+        $metric->increment('value', $value);
+
+        return $metric;
     }
 
     /**
@@ -279,10 +283,14 @@ trait HasMetrics
     {
         $metricName = $name instanceof BackedEnum ? $name->value : $name;
 
-        return $this->aggregatedMetrics()->updateOrCreate(
+        $metric = $this->aggregatedMetrics()->firstOrCreate(
             ['name' => $metricName],
-            ['value' => DB::raw('value - ?', [$value])]
+            ['value' => 0.0]
         );
+
+        $metric->decrement('value', $value);
+
+        return $metric;
     }
 
     /**
