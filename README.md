@@ -1,11 +1,28 @@
-# Laravel Model Metrics 📊
+<p align="center">
+    <img src="art/logo.png" alt="Laravel Artifact Logo" height="280px">
+</p>
 
-[![Build Status](https://github.com/omnitaskba/laravel-model-metrics/actions/workflows/ci.yml/badge.svg)](https://github.com/omnitaskba/laravel-model-metrics/actions/workflows/ci.yml)
-[![Latest Stable Version](http://poser.pugx.org/omnitaskba/laravel-model-metrics/v)](https://packagist.org/packages/omnitaskba/laravel-model-metrics)
-[![Total Downloads](http://poser.pugx.org/omnitaskba/laravel-model-metrics/downloads)](https://packagist.org/packages/omnitaskba/laravel-model-metrics)
-[![License](http://poser.pugx.org/omnitaskba/laravel-model-metrics/license)](https://packagist.org/packages/omnitaskba/laravel-model-metrics)
-[![PHP Version](https://img.shields.io/badge/PHP-8.3%20%7C%208.4-blue.svg)](https://php.net/)
-[![Laravel Version](https://img.shields.io/badge/Laravel-11%20%7C%2012-orange.svg)](https://laravel.com/)
+<p align="center">
+    <a href="https://github.com/omnitaskba/laravel-model-metrics/actions/workflows/ci.yml">
+        <img src="https://github.com/omnitaskba/laravel-model-metrics/actions/workflows/ci.yml/badge.svg" alt="CI Status">
+    </a>
+    <a href="https://packagist.org/packages/omnitaskba/laravel-model-metrics">
+        <img src="https://img.shields.io/packagist/v/omnitaskba/laravel-model-metrics.svg?style=flat-square" alt="Latest Version on Packagist">
+    </a>
+    <a href="https://laravel.com">
+        <img src="https://img.shields.io/badge/Laravel-10.0%2B-FF2D20?style=flat&logo=laravel" alt="Laravel Version">
+    </a>
+    <a href="https://packagist.org/packages/omnitaskba/laravel-model-metrics">
+        <img src="https://img.shields.io/packagist/dt/omnitaskba/laravel-model-metrics?style=flat-square" alt="Total Downloads">
+    </a>
+    <a href="https://packagist.org/packages/omnitaskba/laravel-model-metrics">
+        <img src="https://img.shields.io/packagist/l/omnitaskba/laravel-model-metrics?style=flat-square" alt="License">
+    </a>
+</p>
+
+---
+
+# Laravel Model Metrics 📊
 
 A simple and non-intrusive Laravel package that enables **daily time-series metrics** and **aggregated single-value metrics** for any Eloquent model --- without adding clutter to your main tables.
 
